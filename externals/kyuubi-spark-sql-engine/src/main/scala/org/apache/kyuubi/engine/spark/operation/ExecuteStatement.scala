@@ -58,17 +58,31 @@ class ExecuteStatement(
   override def getOperationLog: Option[OperationLog] = Option(operationLog)
 
   private val operationListener: SQLOperationListener = new SQLOperationListener(this, spark)
+  private val REDACTION_REPLACEMENT_TEXT = "*********(redacted)"
 
   val statementEvent: SparkStatementEvent = SparkStatementEvent(
     session.user,
     statementId,
-    statement,
+    redact(statement),
     spark.sparkContext.applicationId,
     session.handle.identifier.toString,
     lastAccessTime,
     state.toString,
     lastAccessTime)
   EventLoggingService.onEvent(statementEvent)
+
+  def redact(text: String): String = {
+    val regex = spark.sessionState.conf.stringRedactionPattern
+    regex match {
+      case None => text
+      case Some(r) =>
+        if (text == null || text.isEmpty) {
+          text
+        } else {
+          r.replaceAllIn(text, REDACTION_REPLACEMENT_TEXT)
+        }
+    }
+  }
 
   override protected def resultSchema: StructType = {
     if (result == null || result.schema.isEmpty) {
@@ -95,6 +109,7 @@ class ExecuteStatement(
       Thread.currentThread().setContextClassLoader(spark.sharedState.jarClassLoader)
       // TODO: Make it configurable
       spark.sparkContext.addSparkListener(operationListener)
+      spark.sparkContext.setJobDescription(redact(statement))
       result = spark.sql(statement)
       // TODO #921: COMPILED need consider eagerly executed commands
       statementEvent.queryExecution = result.queryExecution.toString()
