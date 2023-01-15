@@ -44,12 +44,13 @@ class SparkBatchProcessBuilder(
       buffer += cla
     }
 
-    val batchKyuubiConf = new KyuubiConf(false)
+    val batchKyuubiConf = KyuubiConf().loadFileDefaults()
     batchConf.foreach(entry => { batchKyuubiConf.set(entry._1, entry._2) })
     // tag batch application
     KyuubiApplicationManager.tagApplication(batchId, "spark", clusterManager(), batchKyuubiConf)
 
-    (batchKyuubiConf.getAll ++ sparkAppNameConf()).foreach { case (k, v) =>
+    val filteredBatchKyuubiConf = batchKyuubiConf.getAll.filter(k => !k._1.startsWith("kyuubi"))
+    (filteredBatchKyuubiConf ++ sparkAppNameConf()).foreach { case (k, v) =>
       buffer += CONF
       buffer += s"${convertConfigKey(k)}=$v"
     }
