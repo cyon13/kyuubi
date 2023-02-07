@@ -65,7 +65,7 @@ class ExecuteStatement(
     case _ => session.sessionManager.getConf.get(SESSION_PROGRESS_ENABLE)
   }
 
-  EventBus.post(SparkOperationEvent(this))
+  EventBus.post(SparkOperationEvent(this, None, currentDB(), invoker()))
 
   override protected def resultSchema: StructType = {
     if (result == null || result.schema.isEmpty) {
@@ -151,7 +151,11 @@ class ExecuteStatement(
   override def setState(newState: OperationState): Unit = {
     super.setState(newState)
     EventBus.post(
-      SparkOperationEvent(this, operationListener.flatMap(_.getExecutionId)))
+      SparkOperationEvent(
+        this,
+        operationListener.flatMap(_.getExecutionId),
+        currentDB(),
+        invoker()))
   }
 
   override def getStatus: OperationStatus = {
@@ -187,7 +191,14 @@ class ExecuteStatement(
         lastAccessTime = lastAccessCompiledTime
       }
       EventBus.post(
-        SparkOperationEvent(this, operationListener.flatMap(_.getExecutionId)))
+        SparkOperationEvent(
+          this,
+          operationListener.flatMap(_.getExecutionId),
+          currentDB(),
+          invoker()))
     }
   }
+
+  private def currentDB(): String = spark.catalog.currentDatabase
+  private def invoker(): String = spark.conf.get("spark.ndap.query.invoker", "Other")
 }
