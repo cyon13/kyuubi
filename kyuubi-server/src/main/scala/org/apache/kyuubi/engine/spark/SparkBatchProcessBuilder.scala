@@ -76,6 +76,10 @@ class SparkBatchProcessBuilder(
   override protected def module: String = "kyuubi-spark-batch-submit"
 
   override def clusterManager(): Option[String] = {
-    batchConf.get(MASTER_KEY).orElse(defaultMaster)
+    if (batchConf.contains(MASTER_KEY)) {
+      batchConf.get(MASTER_KEY)
+    } else {
+      super.clusterManager()
+    }
   }
 }
