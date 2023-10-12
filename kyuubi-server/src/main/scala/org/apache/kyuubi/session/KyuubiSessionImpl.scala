@@ -110,6 +110,7 @@ class KyuubiSessionImpl(
   }
 
   private[kyuubi] def openEngineSession(extraEngineLog: Option[OperationLog] = None): Unit = {
+    logSessionInfo(s"openEngineSessioin started")
     withDiscoveryClient(sessionConf) { discoveryClient =>
       var openEngineSessionConf = optimizedConf
       if (engineCredentials.nonEmpty) {
@@ -117,7 +118,9 @@ class KyuubiSessionImpl(
         openEngineSessionConf =
           optimizedConf ++ Map(KYUUBI_ENGINE_CREDENTIALS_KEY -> engineCredentials)
       }
+      logSessionInfo(s"trying to get or create engine")
       val (host, port) = engine.getOrCreate(discoveryClient, extraEngineLog)
+      logSessionInfo(s"get engine info: $host:$port")
       val passwd =
         if (sessionManager.getConf.get(ENGINE_SECURITY_ENABLED)) {
           InternalSecurityAccessor.get().issueToken()
@@ -126,6 +129,7 @@ class KyuubiSessionImpl(
         }
       try {
         _client = KyuubiSyncThriftClient.createClient(user, passwd, host, port, sessionConf)
+        logSessionInfo(s"openEngineSessioin trying to open session to $host:$port")
         _engineSessionHandle = _client.openSession(protocol, user, passwd, openEngineSessionConf)
       } catch {
         case e: Throwable =>
