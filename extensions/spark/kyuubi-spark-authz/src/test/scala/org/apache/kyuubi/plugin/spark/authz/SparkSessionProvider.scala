@@ -35,7 +35,7 @@ trait SparkSessionProvider {
   protected lazy val spark: SparkSession = {
     val metastore = {
       val path = Files.createTempDirectory("hms")
-      Files.delete(path)
+      Files.deleteIfExists(path)
       path
     }
     SparkSession.builder()

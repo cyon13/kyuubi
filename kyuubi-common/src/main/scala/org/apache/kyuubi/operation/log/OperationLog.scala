@@ -212,7 +212,7 @@ class OperationLog(path: Path) {
     }
 
     trySafely {
-      Files.delete(path)
+      Files.deleteIfExists(path)
     }
   }
 
