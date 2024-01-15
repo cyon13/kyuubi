@@ -18,6 +18,7 @@
 package org.apache.kyuubi.service
 
 import java.io.{Closeable, IOException}
+
 import org.slf4j.Logger
 
 import java.net.URLEncoder
