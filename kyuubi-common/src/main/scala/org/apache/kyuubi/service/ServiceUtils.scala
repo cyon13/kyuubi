@@ -52,7 +52,6 @@ object ServiceUtils {
       userName
     } else {
       URLEncoder.encode(userName, "UTF-8")
-      // userName.substring(0, indexOfDomainMatch)
     }
   }
 
