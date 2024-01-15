@@ -18,8 +18,9 @@
 package org.apache.kyuubi.service
 
 import java.io.{Closeable, IOException}
-
 import org.slf4j.Logger
+
+import java.net.URLEncoder
 
 object ServiceUtils {
 
@@ -50,7 +51,9 @@ object ServiceUtils {
     if (indexOfDomainMatch <= 0) {
       userName
     } else {
-      userName.substring(0, indexOfDomainMatch)
+      val encodedUserName = URLEncoder.encode(userName, "UTF-8")
+      encodedUserName
+      // userName.substring(0, indexOfDomainMatch)
     }
   }
 
